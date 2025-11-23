@@ -1,61 +1,40 @@
-const validateRegistration = (req, res, next) => {
-  const { email, password, firstName, lastName, studentId } = req.body;
-  const errors = [];
+import { z } from 'zod';
 
-  // Email validation
-  if (!email) {
-    errors.push('Email is required');
-  } else if (!email.endsWith('@daystar.ac.ke')) {
-    errors.push('Email must be a valid Daystar University email');
-  }
+// Schemas
+export const registerSchema = z.object({
+  email: z.string().email('Invalid email address').refine(email => email.endsWith('@daystar.ac.ke'), {
+    message: 'Email must be a valid Daystar University email (@daystar.ac.ke)',
+  }),
+  password: z.string().min(6, 'Password must be at least 6 characters long'),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  studentId: z.string().optional(),
+  phoneNumber: z.string().optional(),
+});
 
-  // Password validation
-  if (!password) {
-    errors.push('Password is required');
-  } else if (password.length < 8) {
-    errors.push('Password must be at least 8 characters long');
-  }
+export const loginSchema = z.object({
+  email: z.string().email('Invalid email address').refine(email => email.endsWith('@daystar.ac.ke'), {
+    message: 'Email must be a valid Daystar University email (@daystar.ac.ke)',
+  }),
+  password: z.string().min(1, 'Password is required'),
+});
 
-  // Name validation
-  if (!firstName || firstName.length < 2) {
-    errors.push('First name must be at least 2 characters');
-  }
-  if (!lastName || lastName.length < 2) {
-    errors.push('Last name must be at least 2 characters');
-  }
+export const productSchema = z.object({
+  title: z.string().min(5, 'Title must be at least 5 characters').max(100, 'Title cannot exceed 100 characters'),
+  description: z.string().min(20, 'Description must be at least 20 characters').max(1000, 'Description cannot exceed 1000 characters'),
+  category: z.enum(['Electronics', 'Books', 'Clothing', 'Furniture', 'Sports', 'Other'], { message: 'Invalid category' }),
+  price: z.number().positive('Price must be a positive number'),
+  condition: z.enum(['New', 'Like New', 'Good', 'Fair'], { message: 'Invalid condition' }),
+  location: z.string().min(1, 'Location is required'),
+  images: z.array(z.string()).optional(),
+});
 
-  // Student ID validation
-  if (!studentId) {
-    errors.push('Student ID is required');
-  } else if (!/^\d{6}$/.test(studentId)) {
-    errors.push('Student ID must be 6 digits');
+// Validation middleware factory
+export const validate = (schema) => (req, res, next) => {
+  try {
+    schema.parse(req.body);
+    next();
+  } catch (error) {
+    res.status(400).json({ error: error.errors });
   }
-
-  if (errors.length > 0) {
-    return res.status(400).json({ error: errors.join(', ') });
-  }
-
-  next();
 };
-
-const validateLogin = (req, res, next) => {
-  const { email, password } = req.body;
-  const errors = [];
-
-  if (!email) {
-    errors.push('Email is required');
-  }
-
-  if (!password) {
-    errors.push('Password is required');
-  }
-
-  if (errors.length > 0) {
-    return res.status(400).json({ error: errors.join(', ') });
-  }
-
-  next();
-};
-
-export { validateRegistration, validateLogin };
-

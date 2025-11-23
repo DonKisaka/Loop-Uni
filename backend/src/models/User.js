@@ -18,25 +18,19 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: [true, 'Password is required'],
-    minlength: [8, 'Password must be at least 8 characters long']
+    minlength: [6, 'Password must be at least 6 characters long']
   },
   firstName: {
     type: String,
-    required: [true, 'First name is required'],
-    trim: true,
-    minlength: [2, 'First name must be at least 2 characters']
+    trim: true
   },
   lastName: {
     type: String,
-    required: [true, 'Last name is required'],
-    trim: true,
-    minlength: [2, 'Last name must be at least 2 characters']
+    trim: true
   },
   studentId: {
     type: String,
-    required: [true, 'Student ID is required'],
-    unique: true,
-    match: [/^\d{6}$/, 'Student ID must be 6 digits']
+    trim: true
   },
   phoneNumber: {
     type: String,
