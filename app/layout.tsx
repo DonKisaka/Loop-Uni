@@ -10,8 +10,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Loopuni",
-  description: "Loopuni is a platform for buying and selling products",
+  title: "LoopUni - Daystar Student Marketplace",
+  description: "Buy and sell pre-loved goods within Daystar University's trusted student community. Sustainable, safe, and local transactions made easy.",
 };
 
 export default function RootLayout({
