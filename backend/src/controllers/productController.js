@@ -1,18 +1,14 @@
 import Product from '../models/Product.js';
 
-// @desc    Get all products with optional filters
-// @route   GET /api/products
-// @access  Public
 const getProducts = async (req, res) => {
   try {
     const { category, minPrice, maxPrice, condition, status, search } = req.query;
     let query = {};
 
-    // Build filter query
     if (category) query.category = category;
     if (condition) query.condition = condition;
     if (status) query.status = status;
-    else query.status = 'available'; // Default to available products
+    else query.status = 'available'; 
 
     if (minPrice || maxPrice) {
       query.price = {};
@@ -35,9 +31,6 @@ const getProducts = async (req, res) => {
   }
 };
 
-// @desc    Get single product
-// @route   GET /api/products/:id
-// @access  Public
 const getProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id)
@@ -54,9 +47,6 @@ const getProduct = async (req, res) => {
   }
 };
 
-// @desc    Create new product
-// @route   POST /api/products
-// @access  Private
 const createProduct = async (req, res) => {
   try {
     const { title, description, category, price, condition, images, location } = req.body;
@@ -79,9 +69,6 @@ const createProduct = async (req, res) => {
   }
 };
 
-// @desc    Update product
-// @route   PUT /api/products/:id
-// @access  Private
 const updateProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
@@ -90,7 +77,6 @@ const updateProduct = async (req, res) => {
       return res.status(404).json({ error: 'Product not found' });
     }
 
-    // Check if user is the seller
     if (product.seller.toString() !== req.user._id.toString()) {
       return res.status(403).json({ error: 'You can only update your own products' });
     }
@@ -108,9 +94,6 @@ const updateProduct = async (req, res) => {
   }
 };
 
-// @desc    Delete product
-// @route   DELETE /api/products/:id
-// @access  Private
 const deleteProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
@@ -119,7 +102,6 @@ const deleteProduct = async (req, res) => {
       return res.status(404).json({ error: 'Product not found' });
     }
 
-    // Check if user is the seller
     if (product.seller.toString() !== req.user._id.toString()) {
       return res.status(403).json({ error: 'You can only delete your own products' });
     }
@@ -133,9 +115,6 @@ const deleteProduct = async (req, res) => {
   }
 };
 
-// @desc    Get user's products
-// @route   GET /api/products/user/:userId
-// @access  Public
 const getUserProducts = async (req, res) => {
   try {
     const products = await Product.find({ seller: req.params.userId })

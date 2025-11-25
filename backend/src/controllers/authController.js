@@ -1,7 +1,6 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 
-// Generate JWT Token
 const generateToken = (user) => {
   return jwt.sign(
     { 
@@ -15,34 +14,33 @@ const generateToken = (user) => {
   );
 };
 
-// @desc    Register new user
-// @route   POST /api/auth/register
-// @access  Public
 const register = async (req, res) => {
   try {
     const { email, password, firstName, lastName, studentId, phoneNumber } = req.body;
 
-    // Check if user already exists
     const userExists = await User.findOne({ email });
     if (userExists) {
       return res.status(400).json({ error: 'User already exists with this email' });
     }
 
-    // Check if student ID already exists
-    const studentIdExists = await User.findOne({ studentId });
-    if (studentIdExists) {
-      return res.status(400).json({ error: 'Student ID already registered' });
+    if (studentId) {
+      const studentIdExists = await User.findOne({ studentId });
+      if (studentIdExists) {
+        return res.status(400).json({ error: 'Student ID already registered' });
+      }
     }
 
-    // Create user
-    const user = await User.create({
+    const userData = {
       email,
       password,
-      firstName,
-      lastName,
-      studentId,
-      phoneNumber
-    });
+    };
+    
+    if (firstName) userData.firstName = firstName;
+    if (lastName) userData.lastName = lastName;
+    if (studentId) userData.studentId = studentId;
+    if (phoneNumber) userData.phoneNumber = phoneNumber;
+    
+    const user = await User.create(userData);
 
     if (user) {
       res.status(201).json({
@@ -60,18 +58,30 @@ const register = async (req, res) => {
     }
   } catch (error) {
     console.error('Registration error:', error);
-    res.status(400).json({ error: error.message });
+    
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyPattern || {})[0] || 'field';
+      if (field === 'email') {
+        return res.status(400).json({ error: 'User already exists with this email' });
+      } else if (field === 'studentId') {
+        if (error.keyValue && error.keyValue.studentId === null) {
+          return res.status(400).json({ 
+            error: 'Database configuration issue. Please contact support or run the database fix script.' 
+          });
+        }
+        return res.status(400).json({ error: 'Student ID already registered' });
+      }
+      return res.status(400).json({ error: `${field} already exists` });
+    }
+    
+    res.status(400).json({ error: error.message || 'Registration failed' });
   }
 };
 
-// @desc    Authenticate a user
-// @route   POST /api/auth/login
-// @access  Public
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Check for user email
     const user = await User.findOne({ email });
 
     if (user && (await user.comparePassword(password))) {
@@ -96,9 +106,6 @@ const login = async (req, res) => {
   }
 };
 
-// @desc    Get current user
-// @route   GET /api/auth/me
-// @access  Private
 const getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);

@@ -1,6 +1,5 @@
 import { z } from 'zod';
 
-// Schemas
 export const registerSchema = z.object({
   email: z.string().email('Invalid email address').refine(email => email.endsWith('@daystar.ac.ke'), {
     message: 'Email must be a valid Daystar University email (@daystar.ac.ke)',
@@ -29,12 +28,20 @@ export const productSchema = z.object({
   images: z.array(z.string()).optional(),
 });
 
-// Validation middleware factory
 export const validate = (schema) => (req, res, next) => {
   try {
     schema.parse(req.body);
     next();
   } catch (error) {
-    res.status(400).json({ error: error.errors });
+    if (error.errors && Array.isArray(error.errors)) {
+      const errorMessages = error.errors.map(err => {
+        const path = err.path.join('.');
+        return `${path}: ${err.message}`;
+      });
+      return res.status(400).json({ 
+        error: errorMessages.length === 1 ? errorMessages[0] : errorMessages.join('; ')
+      });
+    }
+    res.status(400).json({ error: error.message || 'Validation failed' });
   }
 };
